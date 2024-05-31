@@ -1,3 +1,29 @@
+//! A small RAII wrapper around a [`Stream`] that automatically invokes a
+//! user-defined action upon being dropped.
+//! 
+//! For example:
+//! 
+//! ```rust
+//! # use futures::stream::{self, StreamExt};
+//! # use stream_guard::GuardStreamExt;
+//! #
+//! async fn f() {
+//!     let mut s = stream::iter(0..3).guard(|| println!("Dropped!"));
+//!     while let Some(i) = s.next().await {
+//!         println!("{}", i);
+//!     }
+//! }
+//! ```
+//! 
+//! would print
+//! 
+//! ```plaintext
+//! 0
+//! 1
+//! 2
+//! Dropped!
+//! ```
+
 use std::{pin::Pin, task::{Context, Poll}};
 
 use futures::Stream;
@@ -37,12 +63,13 @@ impl<S, F> PinnedDrop for StreamGuard<S, F> where S: Stream, F: FnOnce() {
     }
 }
 
-pub trait StreamExt: Stream + Sized {
+/// A convenience extension for creating a [`StreamGuard`] via a method.
+pub trait GuardStreamExt: Stream + Sized {
     /// Wraps the [`Stream`], running the given closure upon being dropped.
     fn guard<F>(self, on_drop: F) -> StreamGuard<Self, F> where F: FnOnce();
 }
 
-impl<S> StreamExt for S where S: Stream + Sized {
+impl<S> GuardStreamExt for S where S: Stream + Sized {
     fn guard<F>(self, on_drop: F) -> StreamGuard<Self, F> where F: FnOnce() {
         StreamGuard::new(self, on_drop)
     }
