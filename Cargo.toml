@@ -1,7 +1,11 @@
 [package]
 name = "stream-guard"
+description = "RAII wrapper around Stream that invokes a custom action on drop "
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/fwcd/stream-guard"
+categories = ["asynchronous"]
 
 [dependencies]
 futures = "0.3.30"
