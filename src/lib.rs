@@ -3,7 +3,7 @@ use std::{pin::Pin, task::{Context, Poll}};
 use futures::Stream;
 use pin_project::{pin_project, pinned_drop};
 
-/// A stream wrapper that automatically runs a closure when dropped.
+/// A [`Stream`] wrapper that automatically runs a custom action when dropped.
 #[pin_project(PinnedDrop)]
 pub struct StreamGuard<S, F> where S: Stream, F: FnOnce() {
     #[pin]
@@ -12,6 +12,7 @@ pub struct StreamGuard<S, F> where S: Stream, F: FnOnce() {
 }
 
 impl<S, F> StreamGuard<S, F> where S: Stream, F: FnOnce() {
+    /// Wraps the given [`Stream`], running the given closure upon being dropped.
     pub fn new(stream: S, on_drop: F) -> Self {
         Self { stream, on_drop: Some(on_drop) }
     }
@@ -37,6 +38,7 @@ impl<S, F> PinnedDrop for StreamGuard<S, F> where S: Stream, F: FnOnce() {
 }
 
 pub trait StreamExt: Stream + Sized {
+    /// Wraps the [`Stream`], running the given closure upon being dropped.
     fn guard<F>(self, on_drop: F) -> StreamGuard<Self, F> where F: FnOnce();
 }
 
